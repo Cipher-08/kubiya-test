@@ -1,0 +1,49 @@
+name: Terraform Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: Terraform Workflow
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Set up Terraform CLI
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0 # Replace with the Terraform version you're using
+
+      # Terraform Init
+      - name: Initialize Terraform
+        run: terraform init
+
+      # Terraform Format Check
+      - name: Check Formatting
+        run: terraform fmt -check
+
+      # Terraform Validate
+      - name: Validate Terraform
+        run: terraform validate
+
+      # Optional: Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      # Optional: Terraform Apply (requires approval on PR)
+      - name: Terraform Apply
+        if: github.event_name == 'push'
+        env:
+          TF_VAR_ACCESS_KEY: ${{ secrets.TF_VAR_ACCESS_KEY }}
+          TF_VAR_SECRET_KEY: ${{ secrets.TF_VAR_SECRET_KEY }}
+        run: terraform apply tfplan
